@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FAW Mecánica Pro Plus</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #333;
+    }
+    header {
+      background: #0c2d57;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 4px solid #fbbc05;
+    }
+    h1 { margin: 0; font-size: 24px; }
+    main {
+      padding: 20px;
+      max-width: 960px;
+      margin: auto;
+    }
+    select, input {
+      width: 100%;
+      max-width: 400px;
+      margin: 15px auto;
+      display: block;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    section {
+      background: white;
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    section h2 {
+      color: #0c2d57;
+      margin-top: 0;
+    }
+    img {
+      max-width: 100%;
+      border-radius: 6px;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+    }
+    .nota, .ficha-extra {
+      background: #e8f5e9;
+      border-left: 4px solid #388e3c;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+    a {
+      color: #0c2d57;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FAW Mecánica Pro Plus</h1>
+    <p>Diagnóstico, diagramas, códigos y más</p>
+  </header>
+  <main>
+    <label for="modelo">Selecciona un modelo:</label>
+    <select id="modelo" onchange="cargarTodo()">
+      <option value="">-- Elegir modelo --</option>
+      <option value="faw-v2">FAW V2</option>
+      <option value="faw-b30">FAW B30</option>
+      <option value="faw-x40">FAW X40</option>
+      <option value="faw-v5">FAW V5</option>
+      <option value="faw-r7">FAW R7</option>
+    </select>
+
+    <input type="text" id="buscar" onkeyup="buscarTexto()" placeholder="Buscar código, sensor, nota, etc.">
+
+    <section id="visor"></section>
+    <section id="manual"></section>
+    <section id="ficha"></section>
+    <section id="extra"></section>
+    <section id="tips"></section>
+  </main>
+
+  <script>
+    const data = {
+      "faw-v2": {
+        diagrama: "diagramas/faw-v2.png",
+        manual: "manuales/faw-v2.pdf",
+        ficha: "Motor 1.3L, 4 cilindros, inyección electrónica, caja manual 5 vel.",
+        extra: {
+          electricidad: "Sistema de 12V, alternador de 90A, batería 45Ah.",
+          sensores: "Sensor CKP debajo de polea del cigüeñal. TPS en mariposa. IAT en admisión.",
+          codigos: ["P0300", "P0118", "P0505"],
+          mantenimiento: "Cambio de bujías cada 15,000 km. Revisar maza ECM por corrosión."
+        },
+        tips: [
+          "Sensor de oxígeno falla con agua en el escape.",
+          "Desconexiones intermitentes comunes cerca del relé principal."
+        ]
+      },
+      "faw-b30": {
+        diagrama: "diagramas/faw-b30.png",
+        manual: "manuales/faw-b30.pdf",
+        ficha: "Motor 1.6L, cadena de distribución, ECU Bosch.",
+        extra: {
+          electricidad: "Sistema de 12V, alternador 100A, batería 55Ah.",
+          sensores: "Sensor de árbol (CMP) en la tapa frontal. MAF entre filtro y mariposa.",
+          codigos: ["P0101", "P0171", "P0302"],
+          mantenimiento: "Verificar relé de inyección cada 20,000 km. Limpieza de cuerpo de aceleración."
+        },
+        tips: [
+          "Cableado en zona de alternador sufre por vibración.",
+          "Software ECM corrige inestabilidad en ralentí."
+        ]
+      },
+      "faw-x40": {
+        diagrama: "diagramas/faw-x40.png",
+        manual: "manuales/faw-x40.pdf",
+        ficha: "Motor 1.8L, caja automática, ABS, ESC.",
+        extra: {
+          electricidad: "Sistema 12V, batería 60Ah, fusible principal 100A.",
+          sensores: "ABS en cada rueda, sensor de volante bajo columna, MAP en múltiple.",
+          codigos: ["P0123", "C0035", "U0100"],
+          mantenimiento: "Cambiar filtro de aire cada 12,000 km. Verificar conectores del ABS trasero."
+        },
+        tips: [
+          "Sensor ABS trasero falla con suciedad.",
+          "Actualizar ECM corrige fallos de aceleración."
+        ]
+      },
+      "faw-v5": {
+        diagrama: "diagramas/faw-v5.png",
+        manual: "manuales/faw-v5.pdf",
+        ficha: "Motor 1.5L, caja manual/automática, sistema EFI.",
+        extra: {
+          electricidad: "Sistema 12V, batería 50Ah, alternador 95A.",
+          sensores: "CKP en bloque motor. MAF entre caja filtro y cuerpo.",
+          codigos: ["P0442", "P0113", "P0301"],
+          mantenimiento: "Revisar fugas en sistema EVAP. Limpieza de conectores de inyección."
+        },
+        tips: [
+          "Unión bomba/culata tiende a fugar.",
+          "Problemas de arranque solucionados con reprogramación ECU."
+        ]
+      },
+      "faw-r7": {
+        diagrama: "diagramas/faw-r7.png",
+        manual: "manuales/faw-r7.pdf",
+        ficha: "Motor 1.6L, SUV, control electrónico de estabilidad.",
+        extra: {
+          electricidad: "Sistema 12V, batería 60Ah, alternador 100A.",
+          sensores: "Sensor de ángulo de giro en volante, ESC bajo asiento del copiloto.",
+          codigos: ["C0040", "P0120", "U1000"],
+          mantenimiento: "Limpiar mariposa cada 10,000 km. Revisión del ESP cada 15,000 km."
+        },
+        tips: [
+          "Módulo de frenos requiere escáner especial para calibración.",
+          "Sensor de giro requiere reinicio tras desconectar batería."
+        ]
+      }
+    };
+
+    function cargarTodo() {
+      const modelo = document.getElementById("modelo").value;
+      if (!modelo || !data[modelo]) return;
+
+      const info = data[modelo];
+      const ex = info.extra;
+
+      document.getElementById("visor").innerHTML = `
+        <h2>Diagrama eléctrico</h2>
+        <img src="${info.diagrama}" alt="Diagrama ${modelo}">
+      `;
+
+      document.getElementById("manual").innerHTML = `
+        <h2>Manual técnico</h2>
+        <a href="${info.manual}" target="_blank">📘 Ver manual en PDF</a>
+      `;
+
+      document.getElementById("ficha").innerHTML = `
+        <h2>Ficha técnica</h2>
+        <p>${info.ficha}</p>
+      `;
+
+      document.getElementById("extra").innerHTML = `
+        <h2>Datos eléctricos y sensores</h2>
+        <div class="ficha-extra"><strong>⚡ Electricidad:</strong> ${ex.electricidad}</div>
+        <div class="ficha-extra"><strong>📍 Sensores:</strong> ${ex.sensores}</div>
+        <div class="ficha-extra"><strong>🔧 Mantenimiento:</strong> ${ex.mantenimiento}</div>
+        <div class="ficha-extra"><strong>💥 Códigos frecuentes:</strong> ${ex.codigos.join(', ')}</div>
+      `;
+
+      document.getElementById("tips").innerHTML = `
+        <h2>Notas del mecánico</h2>
+        ${info.tips.map(t => `<div class="nota">${t}</div>`).join("")}
+      `;
+    }
+
+    function buscarTexto() {
+      const texto = document.getElementById("buscar").value.toLowerCase();
+      const secciones = document.querySelectorAll(".nota, .ficha-extra");
+      secciones.forEach(el => {
+        const contenido = el.textContent.toLowerCase();
+        el.style.display = contenido.includes(texto) ? "block" : "none";
+      });
+    }
+  </script>
+</body>
+</html>
